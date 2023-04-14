@@ -1,0 +1,169 @@
+CREATE DATABASE `clothinfs` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci */;
+
+CREATE TABLE `clientes` (
+  `Codigo_cliente` int(11) NOT NULL AUTO_INCREMENT,
+  `Nombre` varchar(100) DEFAULT NULL,
+  `Apellidos` varchar(100) DEFAULT NULL,
+  `Direccion` varchar(100) DEFAULT NULL,
+  `Telefono` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`Codigo_cliente`)
+) ENGINE=InnoDB AUTO_INCREMENT=1001 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE `detalle_pedido` (
+  `Id_pedido` int(11) NOT NULL AUTO_INCREMENT,
+  `Cantidad_prendas` int(11) DEFAULT NULL,
+  `Talla` int(11) DEFAULT NULL,
+  `prendas_stock` int(11) DEFAULT NULL,
+  PRIMARY KEY (`Id_pedido`),
+  CONSTRAINT `Detalle_pedido_FK` FOREIGN KEY (`Id_pedido`) REFERENCES `pedidos` (`Id_pedido`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE `empleado` (
+  `Id_empleado` int(11) NOT NULL AUTO_INCREMENT,
+  `DNI` varchar(100) DEFAULT NULL,
+  `Nombre` varchar(100) DEFAULT NULL,
+  `Telefono` varchar(100) DEFAULT NULL,
+  `Salario` double DEFAULT NULL,
+  `Ser_jefe` int(11) DEFAULT NULL,
+  PRIMARY KEY (`Id_empleado`),
+  KEY `empleado_FK` (`Ser_jefe`),
+  CONSTRAINT `empleado_FK` FOREIGN KEY (`Ser_jefe`) REFERENCES `empleado` (`Id_empleado`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE `pago` (
+  `Codigo_pago` double NOT NULL AUTO_INCREMENT,
+  `IBAN_transferencia` varchar(100) NOT NULL,
+  `num_tarjeta` varchar(100) NOT NULL,
+  `tipo` varchar(100) DEFAULT NULL,
+  `nombre_transferencia` varchar(100) DEFAULT NULL,
+  `apellidos_transferencia` varchar(100) DEFAULT NULL,
+  `nombre_credito` varchar(100) DEFAULT NULL,
+  `apellidos_credito` varchar(100) DEFAULT NULL,
+  `fecha_cad` varchar(100) DEFAULT NULL,
+  `Id_pedido` int(11) DEFAULT NULL,
+  PRIMARY KEY (`Codigo_pago`,`IBAN_transferencia`,`num_tarjeta`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `pedidos` (
+  `Fecha_pedido` date DEFAULT NULL,
+  `Id_pedido` int(11) NOT NULL AUTO_INCREMENT,
+  `Id_empleado` int(11) DEFAULT NULL,
+  `Codigo_cliente` int(11) DEFAULT NULL,
+  `Codigo_pago` double NOT NULL,
+  PRIMARY KEY (`Id_pedido`),
+  KEY `Id_empleado_FK` (`Id_empleado`),
+  KEY `Codigo_cliente_FK` (`Codigo_cliente`),
+  CONSTRAINT `Codigo_cliente_FK` FOREIGN KEY (`Codigo_cliente`) REFERENCES `clientes` (`Codigo_cliente`),
+  CONSTRAINT `Id_empleado_FK` FOREIGN KEY (`Id_empleado`) REFERENCES `empleado` (`Id_empleado`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `prendas` (
+  `Codigo_prenda` int(11) NOT NULL AUTO_INCREMENT,
+  `Descripcion` varchar(100) DEFAULT NULL,
+  `Precio` double DEFAULT NULL,
+  `NºExistencias` int(11) DEFAULT NULL,
+  PRIMARY KEY (`Codigo_prenda`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `stock` (
+  `Talla` int(11) DEFAULT NULL,
+  `Id_pedido` int(11) NOT NULL,
+  `prendas_stock` int(11) DEFAULT NULL,
+  `Codigo_prenda` int(11) DEFAULT NULL,
+  KEY `Codigo_prenda_FK` (`Codigo_prenda`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+create or replace
+algorithm = UNDEFINED view `clothinfs`.`pedidos_por_cliente` as
+select
+    `c`.`Nombre` as `Nombre`,
+    `c`.`Apellidos` as `Apellidos`,
+    count(0) as `Numero_pedidos`
+from
+    (`clothinfs`.`clientes` `c`
+join `clothinfs`.`pedidos` `p` on
+    (`c`.`Codigo_cliente` = `p`.`Codigo_cliente`))
+group by
+    `c`.`Codigo_cliente`
+order by
+    count(0) desc;
+
+create or replace
+algorithm = UNDEFINED view `clothinfs`.`pedidos_por_empleado` as
+select
+    `e`.`Nombre` as `Nombre`,
+    count(`p`.`Id_pedido`) as `Numero_pedidos`
+from
+    (`clothinfs`.`empleado` `e`
+left join `clothinfs`.`pedidos` `p` on
+    (`e`.`Id_empleado` = `p`.`Id_empleado`))
+group by
+    `e`.`Id_empleado`;
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `clothinfs`.`clientes_ultimo_mes`()
+BEGIN
+    DECLARE total_clientes INT;
+    
+    SET total_clientes = total_clientes_ultimo_mes();
+    
+    SELECT CONCAT('El número de clientes que han hecho un pedido en el último mes es: ', total_clientes) AS Resultado;
+END;
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `clothinfs`.`mostrar_clientes_pedidos`()
+BEGIN
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE codigo_cliente INT;
+  DECLARE nombre_cliente VARCHAR(100);
+  DECLARE apellidos_cliente VARCHAR(100);
+  DECLARE cur CURSOR FOR SELECT Codigo_cliente FROM pedidos;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+  OPEN cur;
+
+  read_loop: LOOP
+    FETCH cur INTO codigo_cliente;
+    IF done THEN
+      LEAVE read_loop;
+    END IF;
+
+    SELECT Nombre, Apellidos INTO nombre_cliente, apellidos_cliente FROM clientes WHERE Codigo_cliente = codigo_cliente;
+    SELECT CONCAT(nombre_cliente, ' ', apellidos_cliente) AS nombre_completo;
+
+  END LOOP;
+
+  CLOSE cur;
+END;
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `clothinfs`.`prendas_en_stock`(IN talla INT)
+BEGIN
+    DECLARE total_prendas INT;
+    
+    SET total_prendas = total_prendas_stock_por_talla(talla);
+    
+    SELECT CONCAT('El número total de prendas en stock para la talla ', talla, ' es: ', total_prendas) AS Resultado;
+END;
+
+CREATE DEFINER=`root`@`localhost` FUNCTION `clothinfs`.`total_clientes_ultimo_mes`() RETURNS int(11)
+BEGIN
+    DECLARE fecha_limite DATE;
+    DECLARE total_clientes INT;
+    
+    SET fecha_limite = DATE_SUB(NOW(), INTERVAL 1 MONTH);
+    
+    SELECT COUNT(DISTINCT p.Codigo_cliente) INTO total_clientes
+    FROM pedidos p
+    WHERE p.Fecha_pedido >= fecha_limite;
+    
+    RETURN total_clientes;
+END;
+
+CREATE DEFINER=`root`@`localhost` FUNCTION `clothinfs`.`total_prendas_stock_por_talla`(talla INT) RETURNS int(11)
+BEGIN
+    DECLARE total_prendas INT;
+    
+    SELECT SUM(s.prendas_stock) INTO total_prendas
+    FROM stock s
+    WHERE s.Talla = talla;
+    
+    RETURN total_prendas;
+END;
