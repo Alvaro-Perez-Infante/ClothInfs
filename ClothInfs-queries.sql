@@ -9,7 +9,7 @@ CREATE TABLE `clientes` (
   `Direccion` varchar(100) DEFAULT NULL,
   `Telefono` varchar(100) DEFAULT NULL,
   PRIMARY KEY (`Codigo_cliente`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1001 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE `detalle_pedido` (
   `Id_pedido` int(11) NOT NULL AUTO_INCREMENT,
@@ -18,7 +18,7 @@ CREATE TABLE `detalle_pedido` (
   `prendas_stock` int(11) DEFAULT NULL,
   PRIMARY KEY (`Id_pedido`),
   CONSTRAINT `Detalle_pedido_FK` FOREIGN KEY (`Id_pedido`) REFERENCES `pedidos` (`Id_pedido`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE `empleado` (
   `Id_empleado` int(11) NOT NULL AUTO_INCREMENT,
@@ -30,7 +30,7 @@ CREATE TABLE `empleado` (
   PRIMARY KEY (`Id_empleado`),
   KEY `empleado_FK` (`Ser_jefe`),
   CONSTRAINT `empleado_FK` FOREIGN KEY (`Ser_jefe`) REFERENCES `empleado` (`Id_empleado`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=54 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE `pago` (
   `Codigo_pago` double NOT NULL AUTO_INCREMENT,
@@ -57,7 +57,7 @@ CREATE TABLE `pedidos` (
   KEY `Codigo_cliente_FK` (`Codigo_cliente`),
   CONSTRAINT `Codigo_cliente_FK` FOREIGN KEY (`Codigo_cliente`) REFERENCES `clientes` (`Codigo_cliente`),
   CONSTRAINT `Id_empleado_FK` FOREIGN KEY (`Id_empleado`) REFERENCES `empleado` (`Id_empleado`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `prendas` (
   `Codigo_prenda` int(11) NOT NULL AUTO_INCREMENT,
@@ -65,7 +65,22 @@ CREATE TABLE `prendas` (
   `Precio` double DEFAULT NULL,
   `NºExistencias` int(11) DEFAULT NULL,
   PRIMARY KEY (`Codigo_prenda`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=33 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `registro_act_pagos` (
+  `Id_pedido` int(11) NOT NULL AUTO_INCREMENT,
+  `Cantidad_prendas` int(11) DEFAULT NULL,
+  `Talla` int(11) DEFAULT NULL,
+  `prendas_stock` int(11) DEFAULT NULL,
+  PRIMARY KEY (`Id_pedido`)
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE `registro_del_prendas` (
+  `Codigo_prenda` int(11) NOT NULL,
+  `Descripcion` varchar(100) NOT NULL,
+  `Precio` double DEFAULT NULL,
+  `NºExistencias` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE `stock` (
   `Talla` int(11) DEFAULT NULL,
