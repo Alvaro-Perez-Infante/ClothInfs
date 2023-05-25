@@ -77,7 +77,7 @@ CREATE TABLE `prendas` (
 	`Descripcion` varchar(100) CHARACTER SET utf8mb4 COLLATE
 	utf8mb4_unicode_ci DEFAULT NULL,
 	`Precio` double DEFAULT NULL,
-	`NoExistencias` int DEFAULT NULL,
+	`NºExistencias` int DEFAULT NULL,
 	PRIMARY KEY (`Codigo_prenda`)
 	) ENGINE=InnoDB AUTO_INCREMENT=401 DEFAULT CHARSET=utf8mb4
 	COLLATE=utf8mb4_unicode_ci;

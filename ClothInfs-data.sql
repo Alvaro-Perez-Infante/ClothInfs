@@ -1590,21 +1590,7 @@ INSERT INTO clothinfs.pedidos (Fecha_pedido,Id_empleado,Codigo_cliente,Codigo_pa
 	 ('2023-03-15',108,1008,408.0),
 	 ('2022-10-01',109,1009,409.0),
 	 ('2023-02-13',110,1010,410.0);
-INSERT INTO clothinfs.pedidos (Fecha_pedido,Id_empleado,Codigo_cliente,Codigo_pago) VALUES
-	 ('2022-12-07',201,1011,411.0),
-	 ('2022-12-18',202,1012,412.0),
-	 ('2023-04-23',203,1013,413.0),
-	 ('2022-07-02',204,1014,414.0),
-	 ('2022-06-07',205,1015,415.0),
-	 ('2022-07-26',206,1016,416.0),
-	 ('2022-11-08',207,1017,417.0),
-	 ('2023-05-06',208,1018,418.0),
-	 ('2022-06-23',209,1019,419.0),
-	 ('2023-01-31',210,1020,420.0);
-INSERT INTO clothinfs.pedidos (Fecha_pedido,Id_empleado,Codigo_cliente,Codigo_pago) VALUES
-	 ('2022-12-05',211,1021,421.0),
-	 ('2023-05-01',NULL,NULL,100.0);	
-	
+
 	-- DATOS DE PRENDAS -- 
 
 INSERT INTO clothinfs.prendas (Descripcion,Precio,NºExistencias) VALUES
@@ -2934,26 +2920,13 @@ INSERT INTO clothinfs.stock (Talla,prendas_stock,Codigo_prenda) VALUES
 -- DATOS DE DETALLE PEDIDO -- 
 
 INSERT INTO clothinfs.detalle_pedido (Id_pedido,Cantidad_prendas,Talla,prendas_stock) VALUES
-	 (101,23,'M',423),
-	 (102,412,'L',523),
-	 (103,123,'XL',234),
-	 (104,532,'S',123),
-	 (105,523,'M',523),
-	 (106,123,'M',631),
-	 (107,234,'S',553),
-	 (108,253,'L',211),
-	 (109,213,'XL',331),
-	 (110,223,'L',521);
-INSERT INTO clothinfs.detalle_pedido (Id_pedido,Cantidad_prendas,Talla,prendas_stock) VALUES
-	 (201,253,'L',535),
-	 (202,412,'XL',245),
-	 (203,525,'M',511),
-	 (204,762,'S',512),
-	 (205,341,'XL',122),
-	 (206,523,'l',523),
-	 (207,122,'XL',552),
-	 (208,454,'M',142),
-	 (209,555,'S',423),
-	 (210,111,'M',234);
-INSERT INTO clothinfs.detalle_pedido (Id_pedido,Cantidad_prendas,Talla,prendas_stock) VALUES
-	 (211,123,'M',423);
+	 (401,23,'M',423),
+	 (402,412,'L',523),
+	 (403,123,'XL',234),
+	 (404,532,'S',123),
+	 (405,523,'M',523),
+	 (406,123,'M',631),
+	 (407,234,'S',553),
+	 (408,253,'L',211),
+	 (409,213,'XL',331),
+	 (410,223,'L',521);
