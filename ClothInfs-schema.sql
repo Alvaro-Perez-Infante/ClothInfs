@@ -1,134 +1,51 @@
-drop database if exists `clothinfs`;
-CREATE DATABASE `clothinfs` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci */;
-use clothinfs;
+-- CONSULTAS
 
-CREATE TABLE `clientes` (
-  `Codigo_cliente` int(11) NOT NULL AUTO_INCREMENT,
-  `Nombre` varchar(100) DEFAULT NULL,
-  `Apellidos` varchar(100) DEFAULT NULL,
-  `Direccion` varchar(100) DEFAULT NULL,
-  `Telefono` varchar(100) DEFAULT NULL,
-  PRIMARY KEY (`Codigo_cliente`)
-) ENGINE=InnoDB AUTO_INCREMENT=1001 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-CREATE TABLE `detalle_pedido` (
-  `Id_pedido` int(11) NOT NULL AUTO_INCREMENT,
-  `Cantidad_prendas` int(11) DEFAULT NULL,
-  `Talla` int(11) DEFAULT NULL,
-  `prendas_stock` int(11) DEFAULT NULL,
-  PRIMARY KEY (`Id_pedido`),
-  CONSTRAINT `Detalle_pedido_FK` FOREIGN KEY (`Id_pedido`) REFERENCES `pedidos` (`Id_pedido`)
-) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-CREATE TABLE `empleado` (
-  `Id_empleado` int(11) NOT NULL AUTO_INCREMENT,
-  `DNI` varchar(100) DEFAULT NULL,
-  `Nombre` varchar(100) DEFAULT NULL,
-  `Telefono` varchar(100) DEFAULT NULL,
-  `Salario` double DEFAULT NULL,
-  `Ser_jefe` int(11) DEFAULT NULL,
-  PRIMARY KEY (`Id_empleado`),
-  KEY `empleado_FK` (`Ser_jefe`),
-  CONSTRAINT `empleado_FK` FOREIGN KEY (`Ser_jefe`) REFERENCES `empleado` (`Id_empleado`)
-) ENGINE=InnoDB AUTO_INCREMENT=54 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-CREATE TABLE `pago` (
-  `Codigo_pago` double NOT NULL AUTO_INCREMENT,
-  `IBAN_transferencia` varchar(100) NOT NULL,
-  `num_tarjeta` varchar(100) NOT NULL,
-  `tipo` varchar(100) DEFAULT NULL,
-  `nombre_transferencia` varchar(100) DEFAULT NULL,
-  `apellidos_transferencia` varchar(100) DEFAULT NULL,
-  `nombre_credito` varchar(100) DEFAULT NULL,
-  `apellidos_credito` varchar(100) DEFAULT NULL,
-  `fecha_cad` varchar(100) DEFAULT NULL,
-  `Id_pedido` int(11) DEFAULT NULL,
-  PRIMARY KEY (`Codigo_pago`,`IBAN_transferencia`,`num_tarjeta`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE `pedidos` (
-  `Fecha_pedido` date DEFAULT NULL,
-  `Id_pedido` int(11) NOT NULL AUTO_INCREMENT,
-  `Id_empleado` int(11) DEFAULT NULL,
-  `Codigo_cliente` int(11) DEFAULT NULL,
-  `Codigo_pago` double NOT NULL,
-  PRIMARY KEY (`Id_pedido`),
-  KEY `Id_empleado_FK` (`Id_empleado`),
-  KEY `Codigo_cliente_FK` (`Codigo_cliente`),
-  CONSTRAINT `Codigo_cliente_FK` FOREIGN KEY (`Codigo_cliente`) REFERENCES `clientes` (`Codigo_cliente`),
-  CONSTRAINT `Id_empleado_FK` FOREIGN KEY (`Id_empleado`) REFERENCES `empleado` (`Id_empleado`)
-) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE `prendas` (
-  `Codigo_prenda` int(11) NOT NULL AUTO_INCREMENT,
-  `Descripcion` varchar(100) DEFAULT NULL,
-  `Precio` double DEFAULT NULL,
-  `NºExistencias` int(11) DEFAULT NULL,
-  PRIMARY KEY (`Codigo_prenda`)
-) ENGINE=InnoDB AUTO_INCREMENT=33 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE `registro_act_pagos` (
-  `Id_pedido` int(11) NOT NULL AUTO_INCREMENT,
-  `Cantidad_prendas` int(11) DEFAULT NULL,
-  `Talla` int(11) DEFAULT NULL,
-  `prendas_stock` int(11) DEFAULT NULL,
-  PRIMARY KEY (`Id_pedido`)
-) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-CREATE TABLE `registro_del_prendas` (
-  `Codigo_prenda` int(11) NOT NULL,
-  `Descripcion` varchar(100) NOT NULL,
-  `Precio` double DEFAULT NULL,
-  `NºExistencias` int(11) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-CREATE TABLE `stock` (
-  `Talla` int(11) DEFAULT NULL,
-  `Id_pedido` int(11) NOT NULL,
-  `prendas_stock` int(11) DEFAULT NULL,
-  `Codigo_prenda` int(11) DEFAULT NULL,
-  KEY `Codigo_prenda_FK` (`Codigo_prenda`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Consulta 1
+-- CONSULTA 1 Obtener el número de pedidos realizados por cada empleado, incluyendo aquellos que no han realizado ningún pedido.
 
 SELECT e.Nombre, COUNT(p.Id_pedido) as Numero_pedidos
 FROM empleado e
 LEFT JOIN pedidos p ON e.Id_empleado = p.Id_empleado
 GROUP BY e.Id_empleado;
 
--- Consulta 2
 
-SELECT c.Nombre, c.Apellidos, COUNT(*) as Numero_pedidos
-FROM clientes c
-INNER JOIN pedidos p ON c.Codigo_cliente = p.Codigo_cliente
-GROUP BY c.Codigo_cliente
-ORDER BY Numero_pedidos DESC;
+-- CONSULTA 2 Obtener los detalles de los pedidos junto con la información de los clientes y empleados asociados
 
--- Consulta 3
+SELECT p.Id_pedido, p.Fecha_pedido, c.Nombre AS Nombre_cliente, c.Apellidos AS Apellidos_cliente,
+       e.Nombre AS Nombre_empleado, e.Telefono AS Telefono_empleado
+FROM pedidos p
+JOIN clientes c ON p.Codigo_cliente = c.Codigo_cliente
+JOIN empleado e ON p.Id_empleado = e.Id_empleado;
+
+
+-- CONSULTA 3 Obtiene la cantidad total de prendas vendidas para cada talla, sumando las cantidades de prendas
+-- de la tabla detalle_pedido y agrupándolas por la talla correspondiente.
 
 SELECT d.Talla, SUM(d.Cantidad_prendas) as Cantidad_vendida
 FROM detalle_pedido d
 INNER JOIN pedidos p ON d.Id_pedido = p.Id_pedido
 GROUP BY d.Talla;
 
--- Consulta 4
 
-SELECT AVG(Salario) as Salario_medio
-FROM empleado
-WHERE Ser_jefe IS NULL AND Salario > (
-  SELECT AVG(Salario) 
-  FROM empleado);
+-- CONSULTA 4 Obtener la cantidad de pedidos realizados por cada cliente:
 
--- Consulta 5
+SELECT c.Codigo_cliente, c.Nombre, COUNT(p.Id_pedido) AS Cantidad_pedidos
+FROM clientes c
+LEFT JOIN pedidos p ON c.Codigo_cliente = p.Codigo_cliente
+GROUP BY c.Codigo_cliente, c.Nombre;
 
-SELECT p.Codigo_prenda, p.Descripcion, s.Talla, SUM(s.prendas_stock) as Cantidad_total
-FROM prendas p 
-INNER JOIN stock s ON p.Codigo_prenda = s.Codigo_prenda
-GROUP BY p.Codigo_prenda, s.Talla
-ORDER BY Cantidad_total DESC;
 
--- Vista 1
+-- CONSULTA 5 Obtener la lista de pedidos que fueron pagados mediante transferencia bancaria y la información de la cuenta de pago asociada:
+
+SELECT pe.Id_pedido, pe.Fecha_pedido, pa.IBAN_transferencia, pa.num_tarjeta
+FROM pedidos pe
+JOIN pago pa ON pe.Codigo_pago = pa.Codigo_pago
+WHERE pa.tipo = 'Transferencia';
+
+
+
+-- VISTAS
+
+-- VISTA 1 - Número de pedidos por empleado
 
 CREATE VIEW pedidos_por_empleado AS
 SELECT e.Nombre, COUNT(p.Id_pedido) as Numero_pedidos
@@ -138,18 +55,22 @@ GROUP BY e.Id_empleado;
 
 SELECT * FROM pedidos_por_empleado;
 
--- Vista 2
 
-CREATE VIEW pedidos_por_cliente AS
-SELECT c.Nombre, c.Apellidos, COUNT(*) as Numero_pedidos
-FROM clientes c
-INNER JOIN pedidos p ON c.Codigo_cliente = p.Codigo_cliente
-GROUP BY c.Codigo_cliente
-ORDER BY Numero_pedidos DESC;
+-- VISTA 2 - Calcula la cantidad total de prendas vendidas por talla, utilizando las tablas "detalle_pedido" y "pedidos".
 
-SELECT * FROM pedidos_por_cliente;
+CREATE VIEW total_prendas_vendidas AS
+SELECT d.Talla, SUM(d.Cantidad_prendas) AS Cantidad_vendida
+FROM detalle_pedido d
+INNER JOIN pedidos p ON d.Id_pedido = p.Id_pedido
+GROUP BY d.Talla;
 
--- Funcion 1
+SELECT * FROM total_prendas_vendidas;
+
+
+
+-- FUNCIONES
+
+-- FUNCION 1 - Devuelve el número total de clientes distintos que realizaron pedidos en el último mes.
 
 DELIMITER //
 CREATE FUNCTION `total_clientes_ultimo_mes` ()
@@ -166,22 +87,29 @@ END//
 DELIMITER ;
 SELECT total_clientes_ultimo_mes();
 
--- Funcion 2 
+
+-- FUNCION 2 - Obtener el número total de prendas en stock por talla (en este caso ‘M’):
 
 DELIMITER //
-CREATE FUNCTION `total_prendas_stock_por_talla` (talla INT)
+CREATE FUNCTION `total_prendas_stock_por_talla` (talla VARCHAR(2) COLLATE utf8mb4_unicode_ci)
 RETURNS INT
 BEGIN
     DECLARE total_prendas INT;
     SELECT SUM(s.prendas_stock) INTO total_prendas
     FROM stock s
-    WHERE s.Talla = talla;
+    WHERE s.Talla = talla COLLATE utf8mb4_unicode_ci;
     RETURN total_prendas;
 END//
 DELIMITER ;
-			SELECT total_prendas_stock_por_talla(2);
+SELECT total_prendas_stock_por_talla('M' COLLATE utf8mb4_unicode_ci);
 
--- Procedimiento 1
+
+
+-- PROCEDIMIENTOS
+
+-- PROCEDIMIENTO 1 Procedimiento que utiliza la función total_clientes_ultimo_mes para 
+-- obtener el número de clientes que han hecho un pedido en el último mes:
+
 
 DELIMITER //
 CREATE PROCEDURE `clientes_ultimo_mes` ()
@@ -194,45 +122,67 @@ DELIMITER ;
 CALL clientes_ultimo_mes();
 
 
--- Procedimiento 2 
+-- PROCEDIMIENTO 2 Procedimiento que utiliza la función total_clientes_ultimo_mes para 
+-- obtener el número de clientes que han hecho un pedido en el último mes:
 
 DELIMITER //
-CREATE PROCEDURE `prendas_en_stock` (IN talla INT)
+CREATE PROCEDURE `prendas_en_stock` (IN talla VARCHAR(2) COLLATE utf8mb4_unicode_ci)
 BEGIN
     DECLARE total_prendas INT;
     SET total_prendas = total_prendas_stock_por_talla(talla);
     SELECT CONCAT('El número total de prendas en stock para la talla ', talla, ' es: ', total_prendas) AS Resultado;
 END//
 DELIMITER ;
-CALL prendas_en_stock(42);
 
--- Procedimiento 3 
+CALL prendas_en_stock('M' COLLATE utf8mb4_unicode_ci);
+CALL prendas_en_stock('S' COLLATE utf8mb4_unicode_ci);
+CALL prendas_en_stock('L' COLLATE utf8mb4_unicode_ci);
+CALL prendas_en_stock('XL' COLLATE utf8mb4_unicode_ci);
+
+
+-- PROCEDIMIENTO 3 Obtener el resultado del recuento de pedidos para un cliente específico.
 
 DELIMITER //
-CREATE PROCEDURE mostrar_clientes_pedidos()
+
+CREATE PROCEDURE mostrar_total_pedidos_cliente(IN codigo_cliente INT)
 BEGIN
-  DECLARE done INT DEFAULT FALSE;
-  DECLARE codigo_cliente INT;
-  DECLARE nombre_cliente VARCHAR(100);
-  DECLARE apellidos_cliente VARCHAR(100);
-  DECLARE cur CURSOR FOR SELECT Codigo_cliente FROM pedidos;
-  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
-  OPEN cur;
-  read_loop: LOOP
-    FETCH cur INTO codigo_cliente;
-    IF done THEN
-      LEAVE read_loop;
-    END IF;
-    SELECT Nombre, Apellidos INTO nombre_cliente, apellidos_cliente FROM clientes WHERE Codigo_cliente = codigo_cliente;
-    SELECT CONCAT(nombre_cliente, ' ', apellidos_cliente) AS nombre_completo;
-  END LOOP;
-  CLOSE cur;
+    DECLARE total_pedidos INT;
+    DECLARE mensaje VARCHAR(100);
+
+    DECLARE cur_pedidos CURSOR FOR
+        SELECT COUNT(*) AS total
+        FROM pedidos
+        WHERE Codigo_cliente = codigo_cliente;
+
+    OPEN cur_pedidos;
+
+    FETCH cur_pedidos INTO total_pedidos;
+
+    SET mensaje = CONCAT('El cliente con código ', codigo_cliente, ' ha realizado ', total_pedidos, ' pedidos.');
+
+    SELECT mensaje AS Resultado;
+
+    CLOSE cur_pedidos;
 END //
+
 DELIMITER ;
-CALL mostrar_clientes_pedidos();
 
--- Trigger 1
+CALL mostrar_total_pedidos_cliente(1001);
 
+
+
+-- TRIGGERS
+
+-- TRIGGER 1 El trigger se activa después de la inserción de un detalle_pedido, 
+-- y añade este nuevo pedido es una nueva tabla que he creado llamada registro_act_pagos:
+
+create table `registro_act_pagos`(
+`Id_pedido` int(11) NOT NULL AUTO_INCREMENT,
+`Cantidad_prendas` int(11) DEFAULT NULL,
+`Talla` varchar(10) DEFAULT NULL,
+`prendas_stock` int(11) DEFAULT NULL,
+PRIMARY KEY (`Id_pedido`)
+);
 DELIMITER //
 CREATE TRIGGER tr_pago_insert AFTER INSERT ON detalle_pedido
 FOR EACH ROW
@@ -242,14 +192,55 @@ BEGIN
 end//
 DELIMITER ;
 
--- Trigger 2
+
+-- TRIGGER 2 Aumenta el salario de un empleado en un 10% antes de insertar o actualizar un registro en la tabla "empleado".
 
 DELIMITER //
-CREATE TRIGGER tr_prendas_delete AFTER DELETE ON prendas
+
+CREATE TRIGGER tr_actualizar_salario_insert BEFORE INSERT ON empleado
 FOR EACH ROW
 BEGIN
-    insert into registro_del_prendas (`Codigo_prenda`,`Descripcion`,`Precio`,`NºExistencias`)
-	VALUES(old.Codigo_prenda,old.Descripcion,old.Precio,old.NºExistencias);
-end //
+    DECLARE nuevo_salario DOUBLE;
+    
+    -- Calcula el nuevo salario del empleado en base a algún criterio
+    SET nuevo_salario = NEW.Salario * 1.1; -- Aumento del 10%
+    
+    -- Actualiza el salario del empleado en el nuevo registro
+    SET NEW.Salario = nuevo_salario;
+END //
+
+CREATE TRIGGER tr_actualizar_salario_update BEFORE UPDATE ON empleado
+FOR EACH ROW
+BEGIN
+    DECLARE nuevo_salario DOUBLE;
+    
+    -- Calcula el nuevo salario del empleado en base a algún criterio
+    SET nuevo_salario = NEW.Salario * 1.1; -- Aumento del 10%
+    
+    -- Actualiza el salario del empleado en el registro actualizado
+    SET NEW.Salario = nuevo_salario;
+END //
+
 DELIMITER ;
 
+-- Ejemplo de uso del trigger tr_actualizar_salario_insert
+
+-- Insertar un nuevo empleado
+INSERT INTO empleado (DNI, Nombre, Telefono, Salario, Ser_jefe)
+VALUES ('123456789', 'Juan Pérez', '555-1234', 2000, NULL);
+
+-- El trigger se ejecutará automáticamente y actualizará el salario del nuevo empleado.
+
+-- Consultar el nuevo salario del empleado
+SELECT Salario FROM empleado WHERE DNI = '123456789';
+
+
+-- Ejemplo de uso del trigger tr_actualizar_salario_update
+
+-- Actualizar el salario de un empleado existente
+UPDATE empleado SET Salario = 2500 WHERE DNI = '123456789';
+
+-- El trigger se ejecutará automáticamente y actualizará el nuevo salario del empleado.
+
+-- Consultar el nuevo salario del empleado
+SELECT Salario FROM empleado WHERE DNI = '123456789';
