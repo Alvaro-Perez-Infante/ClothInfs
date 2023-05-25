@@ -83,26 +83,26 @@ BEGIN
     FROM pedidos p
     WHERE p.Fecha_pedido >= fecha_limite;
     RETURN total_clientes;
-END//
+END //
 DELIMITER ;
-SELECT total_clientes_ultimo_mes();
 
+SELECT total_clientes_ultimo_mes();
 
 -- FUNCION 2 - Obtener el número total de prendas en stock por talla (en este caso ‘M’):
 
 DELIMITER //
-CREATE FUNCTION `total_prendas_stock_por_talla` (talla VARCHAR(2) COLLATE utf8mb4_unicode_ci)
+CREATE FUNCTION `total_prendas_stock_por_talla` (talla VARCHAR(2))
 RETURNS INT
 BEGIN
     DECLARE total_prendas INT;
     SELECT SUM(s.prendas_stock) INTO total_prendas
     FROM stock s
-    WHERE s.Talla = talla COLLATE utf8mb4_unicode_ci;
+    WHERE s.Talla COLLATE utf8mb4_unicode_ci = talla COLLATE utf8mb4_unicode_ci;
     RETURN total_prendas;
 END//
 DELIMITER ;
-SELECT total_prendas_stock_por_talla('M' COLLATE utf8mb4_unicode_ci);
 
+SELECT total_prendas_stock_por_talla('M');
 
 
 -- PROCEDIMIENTOS
@@ -112,13 +112,14 @@ SELECT total_prendas_stock_por_talla('M' COLLATE utf8mb4_unicode_ci);
 
 
 DELIMITER //
-CREATE PROCEDURE `clientes_ultimo_mes` ()
+CREATE PROCEDURE clientes_ultimo_mes ()
 BEGIN
     DECLARE total_clientes INT;
     SET total_clientes = total_clientes_ultimo_mes();
     SELECT CONCAT('El número de clientes que han hecho un pedido en el último mes es: ', total_clientes) AS Resultado;
 END//
 DELIMITER ;
+
 CALL clientes_ultimo_mes();
 
 
@@ -126,18 +127,18 @@ CALL clientes_ultimo_mes();
 -- obtener el número de clientes que han hecho un pedido en el último mes:
 
 DELIMITER //
-CREATE PROCEDURE `prendas_en_stock` (IN talla VARCHAR(2) COLLATE utf8mb4_unicode_ci)
+CREATE PROCEDURE `prendas_en_stock` (IN talla VARCHAR(2))
 BEGIN
     DECLARE total_prendas INT;
-    SET total_prendas = total_prendas_stock_por_talla(talla);
+    SET total_prendas = total_prendas_stock_por_talla(talla COLLATE utf8mb4_unicode_ci);
     SELECT CONCAT('El número total de prendas en stock para la talla ', talla, ' es: ', total_prendas) AS Resultado;
 END//
 DELIMITER ;
 
-CALL prendas_en_stock('M' COLLATE utf8mb4_unicode_ci);
-CALL prendas_en_stock('S' COLLATE utf8mb4_unicode_ci);
-CALL prendas_en_stock('L' COLLATE utf8mb4_unicode_ci);
-CALL prendas_en_stock('XL' COLLATE utf8mb4_unicode_ci);
+CALL prendas_en_stock('M');
+CALL prendas_en_stock('S');
+CALL prendas_en_stock('L');
+CALL prendas_en_stock('XL');
 
 
 -- PROCEDIMIENTO 3 Obtener el resultado del recuento de pedidos para un cliente específico.
@@ -176,13 +177,7 @@ CALL mostrar_total_pedidos_cliente(1001);
 -- TRIGGER 1 El trigger se activa después de la inserción de un detalle_pedido, 
 -- y añade este nuevo pedido es una nueva tabla que he creado llamada registro_act_pagos:
 
-create table `registro_act_pagos`(
-`Id_pedido` int(11) NOT NULL AUTO_INCREMENT,
-`Cantidad_prendas` int(11) DEFAULT NULL,
-`Talla` varchar(10) DEFAULT NULL,
-`prendas_stock` int(11) DEFAULT NULL,
-PRIMARY KEY (`Id_pedido`)
-);
+
 DELIMITER //
 CREATE TRIGGER tr_pago_insert AFTER INSERT ON detalle_pedido
 FOR EACH ROW
