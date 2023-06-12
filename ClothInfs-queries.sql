@@ -141,35 +141,175 @@ CALL prendas_en_stock('L');
 CALL prendas_en_stock('XL');
 
 
--- PROCEDIMIENTO 3 Obtener el resultado del recuento de pedidos para un cliente específico.
+-- PROCEDIMIENTO 3  Este procedimiento tiene como objetivo calcular y mostrar estadísticas relacionadas con las ventas.
 
-DELIMITER //
+DELIMITER &&
 
-CREATE PROCEDURE mostrar_total_pedidos_cliente(IN codigo_cliente INT)
+
+
+CREATE PROCEDURE mostrar_estadisticas()
+
 BEGIN
-    DECLARE total_pedidos INT;
-    DECLARE mensaje VARCHAR(100);
 
-    DECLARE cur_pedidos CURSOR FOR
-        SELECT COUNT(*) AS total
-        FROM pedidos
-        WHERE Codigo_cliente = codigo_cliente;
+   DECLARE salida VARCHAR(10000) DEFAULT '========ESTADISTICAS=======\n-----------Totales-------\nVentas Totales: ';
 
-    OPEN cur_pedidos;
+   DECLARE total DECIMAL(15,2);
 
-    FETCH cur_pedidos INTO total_pedidos;
+   DECLARE done BOOL DEFAULT FALSE;
 
-    SET mensaje = CONCAT('El cliente con código ', codigo_cliente, ' ha realizado ', total_pedidos, ' pedidos.');
+   DECLARE anio INTEGER;
 
-    SELECT mensaje AS Resultado;
+   DECLARE contador INTEGER DEFAULT 1;
 
-    CLOSE cur_pedidos;
-END //
+   DECLARE contador2 INTEGER DEFAULT 1;
+
+   DECLARE dia VARCHAR(20) DEFAULT '';
+
+   DECLARE mes VARCHAR(20) DEFAULT '';
+
+   DECLARE c1 CURSOR FOR  -- CURSOR DE AÑOS
+
+       SELECT YEAR(p.Fecha_pedido) AS Anio, ROUND(SUM(p2.precio * dp.Cantidad_prendas), 2) AS Total
+
+		FROM pedidos p
+
+		INNER JOIN detalle_pedido dp ON p.Id_pedido = dp.Id_pedido COLLATE utf8mb4_general_ci
+
+		INNER JOIN stock s ON dp.Talla = s.Talla COLLATE utf8mb4_general_ci
+
+		INNER JOIN prendas p2 ON s.Codigo_prenda = p2.Codigo_prenda COLLATE utf8mb4_general_ci
+
+		GROUP BY YEAR(p.Fecha_pedido);
+
+   DECLARE c2 CURSOR FOR   -- CURSOR DIAS
+
+       SELECT DAYNAME(p.Fecha_pedido) AS Dia, ROUND(SUM(p2.precio * dp.Cantidad_prendas), 2) AS Total
+
+		FROM pedidos p
+
+		INNER JOIN detalle_pedido dp ON p.Id_pedido = dp.Id_pedido COLLATE utf8mb4_general_ci
+
+		INNER JOIN stock s ON dp.Talla = s.Talla COLLATE utf8mb4_general_ci
+
+		INNER JOIN prendas p2 ON s.Codigo_prenda = p2.Codigo_prenda COLLATE utf8mb4_general_ci
+
+		GROUP BY Dia
+
+		ORDER BY DAYOFWEEK(p.Fecha_pedido) ASC;
+
+   DECLARE c3 CURSOR FOR   -- CURSOR MESES
+
+       SELECT MONTHNAME(p.Fecha_pedido) AS Mes, ROUND(SUM(p2.precio * dp.Cantidad_prendas), 2) AS Total
+
+		FROM pedidos p
+
+		INNER JOIN detalle_pedido dp ON p.Id_pedido = dp.Id_pedido COLLATE utf8mb4_general_ci
+
+		INNER JOIN stock s ON dp.Talla = s.Talla COLLATE utf8mb4_general_ci
+
+		INNER JOIN prendas p2 ON s.Codigo_prenda = p2.Codigo_prenda COLLATE utf8mb4_general_ci
+
+		GROUP BY MONTHNAME(p.Fecha_pedido)
+
+		ORDER BY MONTH(p.Fecha_pedido) ASC;
+
+   DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;   -- para salir del bucle del cursor
+
+
+
+   SELECT SUM(p2.precio * dp.Cantidad_prendas) INTO @total
+
+		FROM pedidos p
+
+		INNER JOIN detalle_pedido dp ON p.Id_pedido = dp.Id_pedido COLLATE utf8mb4_general_ci
+
+		INNER JOIN stock s ON dp.Talla = s.Talla COLLATE utf8mb4_general_ci
+
+		INNER JOIN prendas p2 ON s.Codigo_prenda = p2.Codigo_prenda COLLATE utf8mb4_general_ci;
+
+
+
+   SET salida = CONCAT(salida, @total, '€\n');
+
+
+
+   OPEN c1;    -- recorremos el cursor de años
+
+   FETCH c1 INTO anio, total;
+
+   WHILE (NOT done) DO
+
+       SET salida = CONCAT(salida, 'En ', anio, ': ', total, '€\n');
+
+       FETCH c1 INTO anio, total;
+
+   END WHILE;
+
+   CLOSE c1;
+
+
+
+   SET salida = CONCAT(salida, '=============LISTADOS==========\n');
+
+   SET salida = CONCAT(salida, '----------Valor de las ventas por día--------\n');
+
+   SET done = FALSE;     -- hay que iniciarlo otra vez porque lo cambiamos a true antes
+
+   OPEN c2;
+
+   FETCH c2 INTO dia, total;
+
+   WHILE (NOT done) DO
+
+       SET salida = CONCAT(salida, contador, '.', dia, ': ', total, '€\n');
+
+       SET contador = contador + 1;
+
+       FETCH c2 INTO dia, total;
+
+   END WHILE;
+
+   CLOSE c2;
+
+
+
+   SET salida = CONCAT(salida, '----------Valor de las ventas por mes--------\n');
+
+   SET done = FALSE;        -- hay que iniciarlo otra vez porque lo cambiamos a true antes
+
+   OPEN c3;   -- RECORREMOS EL CURSOR DE MESES
+
+   FETCH c3 INTO mes, total;
+
+   WHILE (NOT done) DO
+
+       SET salida = CONCAT(salida, contador2, '.', mes, ': ', total, '€\n');
+
+       SET contador2 = contador2 + 1;
+
+       FETCH c3 INTO mes, total;
+
+   END WHILE;
+
+   CLOSE c3;
+
+
+
+   SET salida = CONCAT(salida, '===============================\n');
+
+  
+
+   SELECT salida;
+
+END &&
+
+
 
 DELIMITER ;
 
-CALL mostrar_total_pedidos_cliente(1001);
 
+
+CALL mostrar_estadisticas();
 
 
 -- TRIGGERS

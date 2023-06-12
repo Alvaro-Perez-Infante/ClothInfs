@@ -95,3 +95,6 @@ create table `registro_act_pagos`(
 `prendas_stock` int(11) DEFAULT NULL,
 PRIMARY KEY (`Id_pedido`)
 );
+ALTER TABLE clothinfs.stock
+ADD CONSTRAINT stock_PK PRIMARY KEY (Talla, Codigo_prenda);
+ALTER TABLE clothinfs.pago ADD id_pago int NULL;
